@@ -2,33 +2,44 @@
 using System.Collections;
 
 [System.Serializable]
-public class Octagon
+public class Hall
 {
-    public Transform transform;
     public GameObject gameObject;
-    float wallsPerUnit = 2;
+    public Transform transform;
     GameObject wall;
+    float wallsPerUnit = 2;
     GameObject levelGen;
 
-    public Octagon(Vector2 center, float radius, float sideCoef, GameObject wall)
+
+    public Hall(Vector2[] a, Vector2[] b, GameObject wall)
     {
         levelGen = GameObject.Find(".LevelGen");
         gameObject = new GameObject();
-        gameObject.name = "Octagon";
-        gameObject.transform.position = center;
-        transform = gameObject.transform;
+        gameObject.name = "Hall";
         this.wall = wall;
-
-        Line(gameObject, center + new Vector2(-radius * sideCoef, radius), center + new Vector2(radius * sideCoef, radius), "top"); //top
-        Line(gameObject, center + new Vector2(radius * sideCoef, radius), center + new Vector2(radius, radius * sideCoef), "topright"); //topright
-        Line(gameObject, center + new Vector2(radius, radius * sideCoef), center + new Vector2(radius, -radius * sideCoef), "right"); //right
-        Line(gameObject, center + new Vector2(radius, -radius * sideCoef), center + new Vector2(radius * sideCoef, -radius), "bottomright"); //bottomright
-        Line(gameObject, center + new Vector2(-radius * sideCoef, -radius), center + new Vector2(radius * sideCoef, -radius), "bottom"); //bottom
-        Line(gameObject, center + new Vector2(-radius, -radius * sideCoef), center + new Vector2(-radius * sideCoef, -radius), "bottomleft"); //bottomleft
-        Line(gameObject, center + new Vector2(-radius, -radius * sideCoef), center + new Vector2(-radius, radius * sideCoef), "left"); //left
-        Line(gameObject, center + new Vector2(-radius * sideCoef, radius), center + new Vector2(-radius, radius * sideCoef), "topLeft"); //topleft
-
+        transform = gameObject.transform;
+        if (Mathf.Abs(a[0].x) - Mathf.Abs(b[1].x) == Mathf.Abs(a[0].x) - Mathf.Abs(b[1].x))
+        {
+            Line(gameObject, a[0], b[0], "HallA");
+            Line(gameObject, a[1], b[1], "HallB");
+//           Debug.Log("one to one");
+        } 
+        else if (Mathf.Abs(a[0].x) - Mathf.Abs(b[0].x) == Mathf.Abs(a[1].x) - Mathf.Abs(b[1].x))
+        {
+            Line(gameObject, a[0], b[1], "HallA");
+            Line(gameObject, a[1], b[0], "HallB");
+//            Debug.Log("crisscross");
+        }
     }
+	// Use this for initialization
+	void Start () {
+
+	}
+	
+	// Update is called once per frame
+	void Update () {
+	
+	}
 
     void Line(GameObject g, Vector2 a, Vector2 b, string name)
     {
@@ -51,13 +62,12 @@ public class Octagon
             Vector3 nextPos = Vector3.Lerp(a, b, currentPlace);
             GameObject thisWall = Wall(nextPos);
             thisWall.transform.parent = l.transform;
-            if (a.x != b.x && a.y != b.y)
+            if (Mathf.Abs(Mathf.Abs(a.x) - Mathf.Abs(b.x)) > 5 && Mathf.Abs(Mathf.Abs(a.y) - Mathf.Abs(b.y)) > 5)
             {
                 thisWall.transform.rotation = Quaternion.Euler(0, 0, 45);
             }
             currentPlace += spacing;
         }
-
     }
 
     GameObject Wall(Vector3 position)
