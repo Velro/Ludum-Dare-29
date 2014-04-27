@@ -6,18 +6,18 @@ public class Octagon
 {
     public Transform transform;
     public GameObject gameObject;
-    float wallsPerUnit = 2;
-    GameObject wall;
-    GameObject levelGen;
+    float wallsPerUnit = 1;
+    GameObject[] walls;
+    float minScale = 1f;
+    float maxScale = 1.3f;
 
-    public Octagon(Vector2 center, float radius, float sideCoef, GameObject wall)
+    public Octagon(Vector2 center, float radius, float sideCoef, GameObject[] walls)
     {
-        levelGen = GameObject.Find(".LevelGen");
         gameObject = new GameObject();
         gameObject.name = "Octagon";
         gameObject.transform.position = center;
         transform = gameObject.transform;
-        this.wall = wall;
+        this.walls = walls;
 
         Line(gameObject, center + new Vector2(-radius * sideCoef, radius), center + new Vector2(radius * sideCoef, radius), "top"); //top
         Line(gameObject, center + new Vector2(radius * sideCoef, radius), center + new Vector2(radius, radius * sideCoef), "topright"); //topright
@@ -32,8 +32,6 @@ public class Octagon
 
     void Line(GameObject g, Vector2 a, Vector2 b, string name)
     {
-        levelGen.GetComponent<LevelGenerator>().verts.Add(new Vector3(a.x, a.y, 0));
-        levelGen.GetComponent<LevelGenerator>().verts.Add(new Vector3(b.x, b.y, 0));
         GameObject l = new GameObject();
         l.name = name;
         l.transform.parent = g.transform;
@@ -63,9 +61,16 @@ public class Octagon
     GameObject Wall(Vector3 position)
     {
         GameObject wa = new GameObject("Wall");
-        wa.AddComponent<SpriteRenderer>();
-        wa.GetComponent<SpriteRenderer>().sprite = wall.GetComponent<SpriteRenderer>().sprite;
+        wa.AddComponent<MeshFilter>();
+        wa.AddComponent<MeshRenderer>();
+        int rando = (int)Mathf.Floor(Random.Range(0, walls.Length));
+        GameObject modelWall = walls[rando];
+        MeshFilter f = modelWall.GetComponent<MeshFilter>();
+        MeshRenderer r = modelWall.GetComponent<MeshRenderer>();
+        wa.GetComponent<MeshFilter>().mesh = f.mesh;
+        wa.GetComponent<MeshRenderer>().material = r.material;
         wa.transform.position = position;
+        wa.transform.localScale = new Vector3(Random.Range(minScale, maxScale), Random.Range(minScale, maxScale), Random.Range(minScale, maxScale));
         return wa;
     }
 }

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 public class LevelGenerator : MonoBehaviour 
 {
-    public int rooms = 10;
+    public int roomsInCritPath = 10;
     public float minDistance = 6;
     public float maxDistance = 10;
     public float minRoomSize = 2;
@@ -13,27 +13,48 @@ public class LevelGenerator : MonoBehaviour
     public float maxSideCoef = 0.8f;
     int currentRooms;
 
-    public GameObject wall1;
+    public GameObject[] walls;
     public GameObject tick;
-    public List<Vector3> verts = new List<Vector3>();
 	// Use this for initialization
 	void Start () 
     {
-        currentRooms = rooms;
-        Octagon o = new Octagon(Vector2.zero, Random.Range(minRoomSize, maxRoomSize), Random.Range(minSideCoef, maxSideCoef), wall1);
+        currentRooms = roomsInCritPath;
+        Octagon o = new Octagon(Vector2.zero, Random.Range(minRoomSize, maxRoomSize), Random.Range(minSideCoef, maxSideCoef), walls);
         o.transform.parent = transform;
         while (currentRooms > 0)
         {
-            Octagon z = new Octagon(new Vector2(o.transform.position.x, o.transform.position.y) + NextRoomLocation(), Random.Range(minRoomSize, maxRoomSize), Random.Range(minSideCoef, maxSideCoef), wall1);
+            Octagon z = new Octagon(new Vector2(o.transform.position.x, o.transform.position.y) + NextRoomLocation(), Random.Range(minRoomSize, maxRoomSize), Random.Range(minSideCoef, maxSideCoef), walls);
             z.transform.parent = transform;
             Path(new Vector2(o.transform.position.x, o.transform.position.y), new Vector2(z.transform.position.x, z.transform.position.y));
+            if (Random.value > 0.2)
+            {
+                int rando = (int)Mathf.Floor(Random.Range(0, 3));
+                //left
+                if (rando == 0)
+                {
+                    Octagon deadend = new Octagon(new Vector2(z.transform.position.x, z.transform.position.y) + new Vector2(-Random.Range(minDistance, maxDistance), 0), 
+                                                  Random.Range(minRoomSize, maxRoomSize), 
+                                                  Random.Range(minSideCoef, maxSideCoef), walls);
+                    deadend.transform.parent = transform;
+                    Path(new Vector2(z.transform.position.x, z.transform.position.y), new Vector2(deadend.transform.position.x, deadend.transform.position.y));
+                }
+                //right
+                if (rando == 1)
+                {
+                    Octagon deadend = new Octagon(new Vector2(z.transform.position.x, z.transform.position.y) + new Vector2(Random.Range(minDistance, maxDistance), 0),
+                              Random.Range(minRoomSize, maxRoomSize),
+                              Random.Range(minSideCoef, maxSideCoef), walls);
+                    deadend.transform.parent = transform;
+                    Path(new Vector2(z.transform.position.x, z.transform.position.y), new Vector2(deadend.transform.position.x, deadend.transform.position.y));
+                }
+            }
             o = z;
             currentRooms--;
         }
         Mesh mesh = new Mesh();
 
-        Instantiate(tick, Vector3.zero, Quaternion.identity);
-            
+        GameObject t = Instantiate(tick, Vector3.zero, Quaternion.identity) as GameObject;
+        t.SetActive(true);
 	}
 
     Vector2 NextRoomLocation()
@@ -65,7 +86,7 @@ public class LevelGenerator : MonoBehaviour
         
         Vector2[] pointsA = DestroyInLine(a, b);
         Vector2[] pointsB = DestroyInLine(a, b);
-        Hall hall = new Hall(pointsA, pointsB, wall1);
+        Hall hall = new Hall(pointsA, pointsB, walls);
         hall.transform.parent = transform;
     }
 
@@ -73,7 +94,6 @@ public class LevelGenerator : MonoBehaviour
     {
        // Debug.Log(a);
         RaycastHit2D hit = Physics2D.Linecast(a,b);
-        Debug.DrawLine(a, b, Color.red);
         Vector2[] points = new Vector2[2];
         if (hit.collider != null)
         {

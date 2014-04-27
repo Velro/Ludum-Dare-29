@@ -6,29 +6,28 @@ public class Hall
 {
     public GameObject gameObject;
     public Transform transform;
-    GameObject wall;
-    float wallsPerUnit = 2;
-    GameObject levelGen;
+    GameObject[] walls;
+    float wallsPerUnit = 1;
+    float minScale = 1f;
+    float maxScale = 1.3f;
 
 
-    public Hall(Vector2[] a, Vector2[] b, GameObject wall)
+    public Hall(Vector2[] a, Vector2[] b, GameObject[] walls)
     {
-        levelGen = GameObject.Find(".LevelGen");
         gameObject = new GameObject();
         gameObject.name = "Hall";
-        this.wall = wall;
+        this.walls = walls;
         transform = gameObject.transform;
-        if (Mathf.Abs(a[0].x) - Mathf.Abs(b[1].x) == Mathf.Abs(a[0].x) - Mathf.Abs(b[1].x))
+        Line(gameObject, a[1], b[0], "HallA");
+        Line(gameObject, a[0], b[1], "HallB");
+        RaycastHit2D hit = Physics2D.Linecast(Vector2.Lerp(a[0], a[1], 0.5f),Vector2.Lerp(b[0], b[1], 0.5f));
+        if (hit.collider != null)
         {
+            hit.collider.gameObject.SetActive(false);
+            RaycastHit2D hit2 = Physics2D.Linecast(Vector2.Lerp(a[0], a[1], 0.5f), Vector2.Lerp(b[0], b[1], 0.5f));
+            hit2.collider.gameObject.SetActive(false);
             Line(gameObject, a[0], b[0], "HallA");
             Line(gameObject, a[1], b[1], "HallB");
-//           Debug.Log("one to one");
-        } 
-        else if (Mathf.Abs(a[0].x) - Mathf.Abs(b[0].x) == Mathf.Abs(a[1].x) - Mathf.Abs(b[1].x))
-        {
-            Line(gameObject, a[0], b[1], "HallA");
-            Line(gameObject, a[1], b[0], "HallB");
-//            Debug.Log("crisscross");
         }
     }
 	// Use this for initialization
@@ -43,8 +42,6 @@ public class Hall
 
     void Line(GameObject g, Vector2 a, Vector2 b, string name)
     {
-        levelGen.GetComponent<LevelGenerator>().verts.Add(new Vector3(a.x, a.y, 0));
-        levelGen.GetComponent<LevelGenerator>().verts.Add(new Vector3(b.x, b.y, 0));
         GameObject l = new GameObject();
         l.name = name;
         l.transform.parent = g.transform;
@@ -73,9 +70,16 @@ public class Hall
     GameObject Wall(Vector3 position)
     {
         GameObject wa = new GameObject("Wall");
-        wa.AddComponent<SpriteRenderer>();
-        wa.GetComponent<SpriteRenderer>().sprite = wall.GetComponent<SpriteRenderer>().sprite;
+        wa.AddComponent<MeshFilter>();
+        wa.AddComponent<MeshRenderer>();
+        int rando = (int) Mathf.Floor(Random.Range(0, walls.Length));
+        GameObject modelWall = walls[rando];
+        MeshFilter f = modelWall.GetComponent<MeshFilter>();
+        MeshRenderer r = modelWall.GetComponent<MeshRenderer>();
+        wa.GetComponent<MeshFilter>().mesh = f.mesh;
+        wa.GetComponent<MeshRenderer>().material = r.material;
         wa.transform.position = position;
+        wa.transform.localScale = new Vector3(Random.Range(minScale, maxScale), Random.Range(minScale, maxScale), Random.Range(minScale, maxScale));
         return wa;
     }
 }
